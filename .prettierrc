@@ -1,3 +1,6 @@
 {
-  "singleQuote": true
+  "singleQuote": true,
+  "tab-width": 4,
+  "indent_style": "tab" 
 }
+

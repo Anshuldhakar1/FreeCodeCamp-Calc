@@ -1,1 +1,27 @@
-/* Your styles goes here. */
+.display {
+    /* --displayHeight: 2.5rem;  */
+
+    border: 1px solid black;
+    width: 5rem;
+    height: 3rem;
+    padding: 0.5rem;
+    padding-top: 0;
+    position: relative;
+    display: flex;
+    justify-content: end;
+    overflow: hidden;
+}
+
+.inpNum {
+    float: right;
+    font-size: 32px;
+    height: fit-content;
+}
+
+.expression {
+    position: absolute;
+    bottom: 5px;
+    font-size: 14px;
+    white-space: nowrap;
+    /* width:100%; */
+}
