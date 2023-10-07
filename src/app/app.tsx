@@ -4,12 +4,12 @@ import styles from './app.module.css';
 
 export const App:React.FC = () => {
 
-	interface opr {
-		id: string,
-		symbol: string,
-		operate: (a: number, b: number) => number | undefined,
-		priority: number
-	};
+	// interface opr {
+	// 	id: string,
+	// 	symbol: string,
+	// 	operate: (a: number, b: number) => number | undefined,
+	// 	priority: number
+	// };
 	
 	interface numbers { 
 		id: string,
@@ -18,32 +18,32 @@ export const App:React.FC = () => {
 	};
 
 
-	const operations:Array<opr> = [
-		{
-			id: "add", symbol: "+", priority: 1,
-			operate: (a: number, b: number): number => {
-				return a + b;
-			}
-		},
-		{
-			id: "subtract", symbol: "-", priority: 1,
-			operate: (a: number, b: number): number => {
-				return a - b;
-			}
-		},
-		{
-			id: "multiply", symbol: "*", priority: 2,
-			operate: (a: number, b: number): number => {
-				return a * b;
-			}
-		},
-		{
-			id: "divide", symbol: "/", priority: 2,
-			operate: (a: number, b: number): number | undefined => {
-				return b !== 0 ? a / b : undefined;
-			}
-		},
-	];
+	// const operations:Array<opr> = [
+	// 	{
+	// 		id: "add", symbol: "+", priority: 1,
+	// 		operate: (a: number, b: number): number => {
+	// 			return a + b;
+	// 		}
+	// 	},
+	// 	{
+	// 		id: "subtract", symbol: "-", priority: 1,
+	// 		operate: (a: number, b: number): number => {
+	// 			return a - b;
+	// 		}
+	// 	},
+	// 	{
+	// 		id: "multiply", symbol: "*", priority: 2,
+	// 		operate: (a: number, b: number): number => {
+	// 			return a * b;
+	// 		}
+	// 	},
+	// 	{
+	// 		id: "divide", symbol: "/", priority: 2,
+	// 		operate: (a: number, b: number): number | undefined => {
+	// 			return b !== 0 ? a / b : undefined;
+	// 		}
+	// 	},
+	// ];
 
 	const nums:Array<numbers> = [
 		{ id: "seven", display: "7", value:7 },
@@ -57,6 +57,49 @@ export const App:React.FC = () => {
 		{ id: "three", display: "3", value:3 },
 		{ id: "zero", display: "0", value:0 },
 	];
+
+	interface Opr {
+		id: string;
+		symbol: string;
+		operate: (a: number, b: number) => number;
+		priority: number;
+	};
+
+	const operations: { [symbol: string]: Opr } = {
+		"+": {
+			id: "add",
+			symbol: "+",
+			operate: (a: number, b: number): number => {
+				return a + b;
+			},
+			priority: 1,
+		},
+		"-": {
+			id: "subtract",
+			symbol: "-",
+			operate: (a: number, b: number): number => {
+				return a - b;
+			},
+			priority: 1,
+		},
+		"*": {
+			id: "multiply",
+			symbol: "*",
+			operate: (a: number, b: number): number => {
+				return a * b;
+			},
+			priority: 2,
+		},
+		"/": {
+			id: "divide",
+			symbol: "/",
+			operate: (a: number, b: number): number => {
+				return b !== 0 ? a / b : NaN;
+			},
+			priority: 2,
+		},
+	};
+
 
 	const [expression, setExpression] = useState("0");
 	const [inpNum, setinpNum] = useState("0");
@@ -84,153 +127,73 @@ export const App:React.FC = () => {
 		setinpNum(inpNum + ".");
 	};
 
-	const evaluate = () => { 
-
-		// const inp = expression + inpNum;
-
-		// console.log(inp);
-		// input += "s";
-
-		// const input = "12.45+2.0*4-3/10";
-		// const input = "14*7-225/5";
-		const input = "123-4";
-		console.log(input);
-		
-		const inpStack = [];
-
-		let n = "";
-		let decimal = false;
-		for(let i = 0; i < input.length; i++) {
-			if ("0123456789.".includes(input[i])) {
-				n += input[i];
-				if (input[i] === '.') decimal = true;
-			} else {
-				inpStack.push( decimal? parseFloat(n) :parseInt(n) );
-				inpStack.push(input[i]);
-				n = "";
-				decimal = false;
-			} 	
+	const evaluate = () => {
+		try {
+			const result = evaluateInfix( expression+inpNum );
+			setExpression(expression + inpNum);
+			setinpNum(result.toString());
+		} catch (error) {
+			console.error(error);
 		}
-		inpStack.push(decimal ? parseFloat(n) : parseInt(n));
-		console.log(inpStack);
+	}
 
-		const evalStack:number[] = [];
-		const oprStack = [];
-		const inp = [...inpStack];
+	function evaluateInfix(input: string): number {
+		const numStack: number[] = [];
+		const opStack: Opr[] = [];
 
-		const inplen = inpStack.length;
+		const tokens = input.match(/(\d+\.\d+|\d+|\+|-|\*|\/)/g);
+		console.log(tokens);
 
-		for (let i = 0; i < inplen; i++) {
-			const token = inp[i];
-			console.log("token: " + token);
-			if (typeof (token) != "string") {
-				console.log("token: "+token+" is not type string");
-				evalStack.push(token);
-				console.log("num stack after addition: ", evalStack);
-			} else {
-				console.log("token " + token + " is type string");
-				
-				const operator = operations.find((opr) => opr.symbol === token);
-				if (!operator) {
-					console.log("token: " + token + "is not found in the operators");
-					break;
-				}
-
-				console.log("token opeartion: " + operator.id);
-				
-				if (operator.priority < oprStack[oprStack.length - 1]?.priority) {
-					console.log("token: " + token + " has lower priority than " + oprStack[oprStack.length - 1].symbol);
-
-					console.log("num stack before popping elements: ", evalStack);
-
-					const curr_operator = oprStack.shift();
-					if (!curr_operator) {
-						console.log("curr_operator is not valid");
-						break;
+		if (tokens) {
+			for (const token of tokens) {
+				if (!isNaN(Number(token))) {
+					numStack.push(Number(token));
+				} else if (operations[token]) {
+					while (opStack.length > 0 && operations[token].priority <= opStack[opStack.length - 1].priority) {
+						const op = opStack.pop();
+						if (op) {
+							const b = numStack.pop();
+							const a = numStack.pop();
+							if (a !== undefined && b !== undefined) {
+								numStack.push(op.operate(a, b));
+							} else {
+								throw new Error(`Undefined values-(FL) : ${a} and ${b}`);
+							}
+						}
 					}
-
-					const a = evalStack.shift();
-					const b = evalStack.shift();
-
-					console.log("Numbers popped out: " + a + " " + b);
-
-					const res = curr_operator.operate(a, b);
-					console.log("Operation " + curr_operator.symbol + " result: " + res);
-
-					evalStack.unshift(res);
-					console.log("num stack after operation: ", evalStack);
-					console.log("operator stack after operation: " + operator.symbol + " ==> ", oprStack.length);
-					oprStack.forEach(opr => { console.log(opr) });
-
+					opStack.push(operations[token]);
 				} else {
-					if (oprStack.length === 0) console.log("oprStack is empty");
-					else console.log("token: " + token + " has higher or same priority as " + oprStack[oprStack.length - 1].symbol);
-				}
-
-				oprStack.unshift(operator);
-				console.log("operator stack after adding operation ==> ", oprStack.length);
-				oprStack.forEach(opr => { console.log(opr) });
-			}
-			console.log("---");
-		}
-
-		console.log("num stack after all operations: ", evalStack);
-		console.log("operator stack after all operations: ", oprStack);
-
-		console.log("");
-
-		const len = oprStack.length;
-		for (let i = 0; i < len; i++) {
-			const o = oprStack.shift();
-
-			console.log("Selected operation: " + o.symbol);
-			console.log("num stack before popping elements: ", evalStack);
-
-			// const b = evalStack.shift();
-			// const a = evalStack.shift();
-			let a = 0;
-			let b = 0;
-			if (o.symbol === "/") {
-				b = evalStack.pop();
-				a = evalStack.pop();
-			} else {
-				if (o.symbol === "-") {
-					b = evalStack.shift();
-					a = evalStack.shift();
-				} else {
-					a = evalStack.shift();
-					b = evalStack.shift();
+					throw new Error(`Invalid operation: ${token}`);
 				}
 			}
 
-			console.log("Numbers popped out: " + a + " " + b);
-
-			const res = o.operate(a, b);
-			console.log("Operation " + o.symbol + " result: " + res);
-
-			evalStack.unshift(res);
-			console.log("num stack after operation: ", evalStack);
-			console.log("operator stack after operation: " + o.symbol + " ==> ", oprStack.length);
-			oprStack.forEach(opr => { console.log(opr) });
-
-			console.log("---");
+			while (opStack.length > 0) {
+				const op = opStack.pop();
+				if (op) {
+					const b = numStack.pop();
+					const a = numStack.pop();
+					if (a !== undefined && b !== undefined) {
+						numStack.push(op.operate(a, b));
+					} else {
+						throw new Error(`Undefined values-(WL): ${a} and ${b}`);
+					}
+				}
+			}
 		}
 
-		setDecimalInp(false);
-		setExpression("0");
-		setinpNum("0");
+		return numStack[0];
+	}
 
-	};
 
 	return (
 		<div style={{margin:"5rem"} }>
-			<div id="display" className={styles.display}>
+			<div className={styles.display}>
 				<label className={ styles.expression }>{ expression}</label>
-				<label className={ styles.inpNum }>{inpNum}</label>
+				<label id="display" className={ styles.inpNum }>{inpNum}</label>
 			</div>
 			<button id="clear" onClick={clearInput}>AC</button>
 			<div>
-				{operations.map(op => { 
+				{Object.values(operations).map(op => { 
 					return <button key={op.id} id={op.id} onClick={() => { handleOpClick(op.symbol); }}>{ op.symbol}</button>
 				})}
 			</div>
