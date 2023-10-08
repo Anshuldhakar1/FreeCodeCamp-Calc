@@ -1,34 +1,10 @@
 
-// Structure:
-
-// 1) Should contain a clickable element containing an = (equal sign) with a corresponding id="equals".
-
-// 2) Should contain 10 clickable elements containing one number each from 0-9, with the following corresponding IDs:
-// id = "zero", id = "one", id = "two", id = "three", id = "four", id = "five", id = "six", id = "seven", id = "eight", and id = "nine"
-
-// 3) Should contain 4 clickable elements each containing one of the 4 primary mathematical operators with the following
-// corresponding IDs: id = "add", id = "subtract", id = "multiply", id = "divide"
-
-// 4) Should contain a clickable element containing a . (decimal point) symbol with a corresponding id="decimal"
-
-// 5) Should contain a clickable element with an id="clear".
-
-// 6) Should contain an element to display values with a corresponding id="display".
-
 // 	Features:
 
-// 7)  At any time, pressing the clear button clears the input and output values, and returns the
-//     calculator to its initialized state; 0 should be shown in the element with the id of display.
-
-// 8)  As I input numbers, I should be able to see my input in the element with the id of display.
+import { useState } from "react";
 
 // 9)  In any order, I should be able to add, subtract, multiply and divide a chain of numbers of any length,
 // 	   and when I hit =, the correct result should be shown in the element with the id of display.
-
-// 10)  When inputting numbers, my calculator should not allow a number to begin with multiple zeros.
-
-// 11)  When the decimal element is clicked, a . should append to the currently displayed value; two . in
-//      one number should not be accepted.
 
 // 12)  I should be able to perform any operation (+, -, *, /) on numbers containing decimal points
 
@@ -58,26 +34,89 @@ export const App: React.FC = () => {
 		{ display: "six", value: 6 },
 		{ display: "seven", value: 7 },
 		{ display: "eight", value: 8 },
-		{ display: "nine", value: 9 },
-		{ display: "zero", value: 0 }
+		{ display: "nine", value: 9 }
 	];
 
+	const [inpNumber, setInpNumber] = useState("0"); 
+	const [inpDecimal, setDecimalinp] = useState(true);
+	const [expression, setExpr] = useState("0");
+
+	const addOperation = (oprType: string) => {
+		try {
+			setExpr((expression === "0" ? "" : expression) + inpNumber);
+			switch (oprType) {
+				case "add": console.log("addition");
+					setInpNumber("+");
+					break;
+				
+				case "sub": console.log("subtraction");
+					setInpNumber("-");
+					break;
+				
+				case "mul": console.log("multiplication");
+					setInpNumber("*");
+					break;
+				
+				case "div": console.log("division");
+					setInpNumber("/");
+					break;
+				default: throw new Error("Invalid Operation detected.");
+			}
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
+	const handleNumClick = (value: string) => { 
+		if ("0123456789.".includes(inpNumber))
+			setInpNumber((inpNumber === "0" ? "" : inpNumber) + value);
+		else {
+			setExpr(expression + inpNumber);
+			setInpNumber(value);
+		}
+	}
+
+	const handleClear = () => { 
+		setInpNumber("0");
+		setDecimalinp(true);
+		setExpr("0");
+	};
+
+	const handleDecimalInput = () => { 
+		if (inpDecimal) {
+			setInpNumber(inpNumber + ".");
+			setDecimalinp(false);
+		}
+	};
+
 	return (
-		<div style={{margin: "15rem"} }>
-			<div>
-				<button> + </button>
-				<button> - </button>
-				<button> * </button>
-				<button> / </button>
+		<div style={{ margin: "15rem" }}>
+			<div id="inputs">
+				<div id="display">{inpNumber}</div>
+				<label id="expression">{ expression}</label>
 			</div>
-			<div>
+			<div id="editable">
+				<button id="clear" onClick={() => { handleClear(); }}>AC</button>
+				<button id="back">C</button>
+			</div>
+			<div id="operations">
+				<button id="add" onClick={() => { addOperation("add"); }}> + </button>
+				<button id="subtract" onClick={() => { addOperation("sub"); }}> - </button>
+				<button id="multiply" onClick={() => { addOperation("mul"); }}> * </button>
+				<button id="divide" onClick={() => { addOperation("div"); }}> / </button>
+			</div>
+			<div id="numpad">
 				{
 					numbers.map((num) => { 
-						return <button key={num.display} id={num.display}>{ num.value}</button>
+						return <button key={num.display} id={num.display} onClick={() => { handleNumClick(num.value.toString()); }}>{ num.value}</button>
 					})
 				}
 			</div>
-			<button> = </button>
+			<div id="last-row">
+				<button id="zero" onClick={() => { handleNumClick("0"); }} >0</button>
+				<button id="decimal" onClick={() => { handleDecimalInput(); }}>.</button>
+				<button> = </button>
+			</div>
 		</div>
 	);
 };
