@@ -44,9 +44,40 @@
 // 	    like 2 / 7 with reasonable precision to at least 4 decimal places).
 
 export const App: React.FC = () => {
+
+	interface n {
+		display: string;
+		value: number;
+	}
+	const numbers: Array<n> = [
+		{ display:"one", value: 1 },
+		{ display: "two", value: 2 },
+		{ display: "three", value: 3 },
+		{ display: "four", value: 4 },
+		{ display: "five", value: 5 },
+		{ display: "six", value: 6 },
+		{ display: "seven", value: 7 },
+		{ display: "eight", value: 8 },
+		{ display: "nine", value: 9 },
+		{ display: "zero", value: 0 }
+	];
+
 	return (
-		<div>
-			<h1>Hello World!</h1>
+		<div style={{margin: "15rem"} }>
+			<div>
+				<button> + </button>
+				<button> - </button>
+				<button> * </button>
+				<button> / </button>
+			</div>
+			<div>
+				{
+					numbers.map((num) => { 
+						return <button key={num.display} id={num.display}>{ num.value}</button>
+					})
+				}
+			</div>
+			<button> = </button>
 		</div>
 	);
 };
