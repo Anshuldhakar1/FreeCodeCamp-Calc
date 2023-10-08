@@ -1,212 +1,54 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { useState } from 'react';
-import styles from './app.module.css';
 
-export const App:React.FC = () => {
+// Structure:
 
-	// interface opr {
-	// 	id: string,
-	// 	symbol: string,
-	// 	operate: (a: number, b: number) => number | undefined,
-	// 	priority: number
-	// };
-	
-	interface numbers { 
-		id: string,
-		display: string,
-		value: number
-	};
+// 1) Should contain a clickable element containing an = (equal sign) with a corresponding id="equals".
 
+// 2) Should contain 10 clickable elements containing one number each from 0-9, with the following corresponding IDs:
+// id = "zero", id = "one", id = "two", id = "three", id = "four", id = "five", id = "six", id = "seven", id = "eight", and id = "nine"
 
-	// const operations:Array<opr> = [
-	// 	{
-	// 		id: "add", symbol: "+", priority: 1,
-	// 		operate: (a: number, b: number): number => {
-	// 			return a + b;
-	// 		}
-	// 	},
-	// 	{
-	// 		id: "subtract", symbol: "-", priority: 1,
-	// 		operate: (a: number, b: number): number => {
-	// 			return a - b;
-	// 		}
-	// 	},
-	// 	{
-	// 		id: "multiply", symbol: "*", priority: 2,
-	// 		operate: (a: number, b: number): number => {
-	// 			return a * b;
-	// 		}
-	// 	},
-	// 	{
-	// 		id: "divide", symbol: "/", priority: 2,
-	// 		operate: (a: number, b: number): number | undefined => {
-	// 			return b !== 0 ? a / b : undefined;
-	// 		}
-	// 	},
-	// ];
+// 3) Should contain 4 clickable elements each containing one of the 4 primary mathematical operators with the following
+// corresponding IDs: id = "add", id = "subtract", id = "multiply", id = "divide"
 
-	const nums:Array<numbers> = [
-		{ id: "seven", display: "7", value:7 },
-		{ id: "eight", display: "8", value:8 },
-		{ id: "nine", display: "9", value:9 },
-		{ id: "four", display: "4", value:4 },
-		{ id: "five", display: "5", value:5 },
-		{ id: "six", display: "6", value:6 },
-		{ id: "one", display: "1", value:1 },
-		{ id: "two", display: "2", value:2 },
-		{ id: "three", display: "3", value:3 },
-		{ id: "zero", display: "0", value:0 },
-	];
+// 4) Should contain a clickable element containing a . (decimal point) symbol with a corresponding id="decimal"
 
-	interface Opr {
-		id: string;
-		symbol: string;
-		operate: (a: number, b: number) => number;
-		priority: number;
-	};
+// 5) Should contain a clickable element with an id="clear".
 
-	const operations: { [symbol: string]: Opr } = {
-		"+": {
-			id: "add",
-			symbol: "+",
-			operate: (a: number, b: number): number => {
-				return a + b;
-			},
-			priority: 1,
-		},
-		"-": {
-			id: "subtract",
-			symbol: "-",
-			operate: (a: number, b: number): number => {
-				return a - b;
-			},
-			priority: 1,
-		},
-		"*": {
-			id: "multiply",
-			symbol: "*",
-			operate: (a: number, b: number): number => {
-				return a * b;
-			},
-			priority: 2,
-		},
-		"/": {
-			id: "divide",
-			symbol: "/",
-			operate: (a: number, b: number): number => {
-				return b !== 0 ? a / b : NaN;
-			},
-			priority: 2,
-		},
-	};
+// 6) Should contain an element to display values with a corresponding id="display".
 
+// 	Features:
 
-	const [expression, setExpression] = useState("0");
-	const [inpNum, setinpNum] = useState("0");
-	const [decimalInput, setDecimalInp] = useState(false);
+// 7)  At any time, pressing the clear button clears the input and output values, and returns the
+//     calculator to its initialized state; 0 should be shown in the element with the id of display.
 
-	const handleNumClick = (val: string) => {
-		setinpNum( inpNum!=="0"? inpNum+val:val );
-	}
+// 8)  As I input numbers, I should be able to see my input in the element with the id of display.
 
-	const handleOpClick = (symbol: string) => {
-		setDecimalInp(false);
-		setExpression( expression!=="0"? expression + inpNum + symbol: inpNum + symbol );
-		setinpNum("0");
-	}
+// 9)  In any order, I should be able to add, subtract, multiply and divide a chain of numbers of any length,
+// 	   and when I hit =, the correct result should be shown in the element with the id of display.
 
-	const clearInput = () => {
-		setDecimalInp(false);
-		setExpression("0");
-		setinpNum("0");
-	};
-	
-	const handleDecimalClick = () => { 
-		if (decimalInput) return null;
-		setDecimalInp(true);
-		setinpNum(inpNum + ".");
-	};
+// 10)  When inputting numbers, my calculator should not allow a number to begin with multiple zeros.
 
-	const evaluate = () => {
-		try {
-			const result = evaluateInfix( expression+inpNum );
-			setExpression(expression + inpNum);
-			setinpNum(result.toString());
-		} catch (error) {
-			console.error(error);
-		}
-	}
+// 11)  When the decimal element is clicked, a . should append to the currently displayed value; two . in
+//      one number should not be accepted.
 
-	function evaluateInfix(input: string): number {
-		const numStack: number[] = [];
-		const opStack: Opr[] = [];
+// 12)  I should be able to perform any operation (+, -, *, /) on numbers containing decimal points
 
-		const tokens = input.match(/(\d+\.\d+|\d+|\+|-|\*|\/)/g);
-		console.log(tokens);
+// 13)  If 2 or more operators are entered consecutively, the operation performed should be the last
+//      operator entered(excluding the negative(-) sign).For example, if 5 + * 7 = is entered, the
+//      result should be 35(i.e. 5 * 7); if 5 * - 5 = is entered, the result should be - 25(i.e. 5 * (-5))
 
-		if (tokens) {
-			for (const token of tokens) {
-				if (!isNaN(Number(token))) {
-					numStack.push(Number(token));
-				} else if (operations[token]) {
-					while (opStack.length > 0 && operations[token].priority <= opStack[opStack.length - 1].priority) {
-						const op = opStack.pop();
-						if (op) {
-							const b = numStack.pop();
-							const a = numStack.pop();
-							if (a !== undefined && b !== undefined) {
-								numStack.push(op.operate(a, b));
-							} else {
-								throw new Error(`Undefined values-(FL) : ${a} and ${b}`);
-							}
-						}
-					}
-					opStack.push(operations[token]);
-				} else {
-					throw new Error(`Invalid operation: ${token}`);
-				}
-			}
+// 14)  Pressing an operator immediately following = should start a new calculation that operates on
+//      the result of the previous evaluation.
 
-			while (opStack.length > 0) {
-				const op = opStack.pop();
-				if (op) {
-					const b = numStack.pop();
-					const a = numStack.pop();
-					if (a !== undefined && b !== undefined) {
-						numStack.push(op.operate(a, b));
-					} else {
-						throw new Error(`Undefined values-(WL): ${a} and ${b}`);
-					}
-				}
-			}
-		}
+// 15)  My calculator should have several decimal places of precision when it comes to rounding 
+//      (note that there is no exact standard, but you should be able to handle calculations 
+// 	    like 2 / 7 with reasonable precision to at least 4 decimal places).
 
-		return numStack[0];
-	}
-
-
+export const App: React.FC = () => {
 	return (
-		<div style={{margin:"5rem"} }>
-			<div className={styles.display}>
-				<label className={ styles.expression }>{ expression}</label>
-				<label id="display" className={ styles.inpNum }>{inpNum}</label>
-			</div>
-			<button id="clear" onClick={clearInput}>AC</button>
-			<div>
-				{Object.values(operations).map(op => { 
-					return <button key={op.id} id={op.id} onClick={() => { handleOpClick(op.symbol); }}>{ op.symbol}</button>
-				})}
-			</div>
-			<div id="numpad">
-				{nums.map(num => { 
-					return <button key={num.id} onClick={() => { handleNumClick(num.display); }} id={num.id}>{num.display}</button>
-				}) }
-			</div>
-			<button id="decimal" onClick={() => { handleDecimalClick(); }}>.</button>
-			<button id="equals" onClick={() => { evaluate(); }} >=</button>
-			{/* <button id="equals">=</button> */}
+		<div>
+			<h1>Hello World!</h1>
 		</div>
 	);
-}
+};
 
 export default App;
