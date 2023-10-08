@@ -1,23 +1,108 @@
-
-// 	Features:
-
 import { useState } from "react";
 
-// 9)  In any order, I should be able to add, subtract, multiply and divide a chain of numbers of any length,
-// 	   and when I hit =, the correct result should be shown in the element with the id of display.
+function tokenize(infix: string): string[] {
+	const tokens: string[] = [];
+	let token = '';
+	for (let i = 0; i < infix.length; i++) {
+		if (/[-+]?([0-9 .])?[0-9 .]+/.test(infix[i])) {
+			token += infix[i];
+			if (i + 1 < infix.length && /[-+]?([0-9 .])?[0-9 .]+/.test(infix[i + 1])) {
+				continue;
+			}
+			tokens.push(token);
+			token = '';
+		} else if (infix[i] === '(' || infix[i] === ')' || infix[i] === '+' || infix[i] === '*' || infix[i] === '/') {
+			if (token) {
+				tokens.push(token);
+				token = '';
+			}
+			tokens.push(infix[i]);
+			continue;
+		} else if (infix[i] === '-') {
+			if (token) {
+				tokens.push(token);
+				token = '';
+			}
+			token += infix[i];
+		}
+		if (token) {
+			tokens.push(token);
+			token = '';
+		}
+	}
+	if (token) {
+		tokens.push(token);
+	}
+	return tokens;
+}
 
-// 12)  I should be able to perform any operation (+, -, *, /) on numbers containing decimal points
+function infixToPostfix(tokens: string[]): string {
+	let result = '';
+	const stack: string[] = [];
+	for (const token of tokens) {
+		if (/[-+]?([0-9 .])?[0-9 .]+/.test(token)) {
+			result += token + ' ';
+		} else if (token === '(') {
+			stack.push(token);
+		} else if (token === ')') {
+			while (stack[stack.length - 1] !== '(') {
+				result += stack.pop() + ' ';
+			}
+			stack.pop();
+		} else {
+			while (stack.length > 0 && getPrecedence(token) <= getPrecedence(stack[stack.length - 1])) {
+				result += stack.pop() + ' ';
+			}
+			stack.push(token);
+		}
+	}
+	while (stack.length > 0) {
+		result += stack.pop() + ' ';
+	}
+	return result.trim();
+}
 
-// 13)  If 2 or more operators are entered consecutively, the operation performed should be the last
-//      operator entered(excluding the negative(-) sign).For example, if 5 + * 7 = is entered, the
-//      result should be 35(i.e. 5 * 7); if 5 * - 5 = is entered, the result should be - 25(i.e. 5 * (-5))
+function getPrecedence(op: string): number {
+	switch (op) {
+		case '+':
+		case '-':
+			return 1;
+		case '*':
+		case '/':
+			return 2;
+		default:
+			return -1;
+	}
+}
 
-// 14)  Pressing an operator immediately following = should start a new calculation that operates on
-//      the result of the previous evaluation.
+function evaluatePostfix(postfix: string): number {
+	const stack: number[] = [];
+	const tokens = postfix.split(' ');
+	for (const token of tokens) {
+		if (!isNaN(Number(token))) {
+			stack.push(Number(token));
+		} else {
+			const operand2 = stack.pop() as number;
+			const operand1 = stack.pop() as number;
+			switch (token) {
+				case '+':
+					stack.push(operand1 + operand2);
+					break;
+				case '-':
+					stack.push(operand1 - operand2);
+					break;
+				case '*':
+					stack.push(operand1 * operand2);
+					break;
+				case '/':
+					stack.push(operand1 / operand2);
+					break;
+			}
+		}
+	}
+	return stack.pop() as number;
+}
 
-// 15)  My calculator should have several decimal places of precision when it comes to rounding 
-//      (note that there is no exact standard, but you should be able to handle calculations 
-// 	    like 2 / 7 with reasonable precision to at least 4 decimal places).
 
 export const App: React.FC = () => {
 
@@ -41,39 +126,65 @@ export const App: React.FC = () => {
 	const [inpDecimal, setDecimalinp] = useState(true);
 	const [expression, setExpr] = useState("0");
 
+	// const [lastOperator, setLastOperator] = useState("");
+
+	// const addOperation = (oprType: string) => {
+	// 	try {
+	// 		setInpNumber("0");
+	// 		let updatedExpression = expression;
+
+	// 		// Handle consecutive operators
+	// 		if (oprType === "-" && lastOperator === "-") {
+	// 			updatedExpression = expression.slice(0, -1) + oprType;
+	// 		} else {
+	// 			updatedExpression += oprType;
+	// 		}
+
+	// 		setExpr(updatedExpression);
+	// 		setLastOperator(oprType);
+	// 		setDecimalinp(true);
+	// 	} catch (error) {
+	// 		console.error(error);
+	// 	}
+	// };
+
+
 	const addOperation = (oprType: string) => {
 		try {
-			setExpr((expression === "0" ? "" : expression) + inpNumber);
+			setInpNumber("0");
+			const lastChar = expression.slice(-1);
+			const operators = ["+", "-", "*", "/"];
+
+			if (operators.includes(lastChar)) {
+				setExpr(expression.slice(0, -1));
+			}
 			switch (oprType) {
 				case "add": console.log("addition");
-					setInpNumber("+");
+					setExpr(expression + "+");
 					break;
 				
 				case "sub": console.log("subtraction");
-					setInpNumber("-");
+					setExpr(expression + "-");
 					break;
 				
 				case "mul": console.log("multiplication");
-					setInpNumber("*");
+					setExpr(expression + "*");
 					break;
 				
 				case "div": console.log("division");
-					setInpNumber("/");
+					setExpr(expression + "/");
 					break;
 				default: throw new Error("Invalid Operation detected.");
 			}
+			setDecimalinp(true);
 		} catch (error) {
 			console.error(error);
 		}
 	};
 
 	const handleNumClick = (value: string) => { 
-		if ("0123456789.".includes(inpNumber))
-			setInpNumber((inpNumber === "0" ? "" : inpNumber) + value);
-		else {
-			setExpr(expression + inpNumber);
-			setInpNumber(value);
-		}
+		setInpNumber((inpNumber === "0" ? "" : inpNumber) + value);
+		setExpr((expression === "0" ? "" : expression) + value);
 	}
 
 	const handleClear = () => { 
@@ -82,9 +193,23 @@ export const App: React.FC = () => {
 		setExpr("0");
 	};
 
+	const handleResult = () => { 
+		const inp = expression;
+		const tokens = tokenize(inp);
+
+		const pf = infixToPostfix(tokens);
+		const res = evaluatePostfix(pf);
+
+		setInpNumber((res.toString().includes(".") ? parseFloat(res.toFixed(4)) : res).toString());
+		setExpr("0");
+		setDecimalinp(true);
+	};
+
 	const handleDecimalInput = () => { 
 		if (inpDecimal) {
 			setInpNumber(inpNumber + ".");
+			if (inpNumber === "0") setExpr(expression + "0.");
+			else setExpr(expression + ".");
 			setDecimalinp(false);
 		}
 	};
@@ -115,7 +240,7 @@ export const App: React.FC = () => {
 			<div id="last-row">
 				<button id="zero" onClick={() => { handleNumClick("0"); }} >0</button>
 				<button id="decimal" onClick={() => { handleDecimalInput(); }}>.</button>
-				<button> = </button>
+				<button id="equals" onClick={() => { handleResult(); }}> = </button>
 			</div>
 		</div>
 	);
