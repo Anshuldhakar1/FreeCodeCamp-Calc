@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import styles from './app.module.css';
 
@@ -109,7 +109,7 @@ export const App: React.FC = () => {
 
     const [inpNumber, setInpNumber] = useState("0"); 
     const [inpDecimal, setDecimalinp] = useState(true);
-    const [expression, setExpr] = useState("0");
+    const [expression, setExpr] = useState("");
     const [allowDirect, setAllowDirect] = useState(false);
 
      const addOperation = (oprType: string) => {
@@ -119,41 +119,45 @@ export const App: React.FC = () => {
                 setAllowDirect(false);
                 expr = inpNumber;
             }
-            setInpNumber("0");
             switch (oprType) {
-                case "add": expr = (expr !== "" ? expr : expression) + "+"; break;
-                case "sub": expr = (expr !== "" ? expr : expression) + "-"; break;
-                case "mul": expr = (expr !== "" ? expr : expression) + "*"; break;
-                case "div": expr = (expr !== "" ? expr : expression) + "/";	break;
+                case "+": expr = (expr !== "" ? expr : expression) + "+"; break;
+                case "-": expr = (expr !== "" ? expr : expression) + "-"; break;
+                case "*": expr = (expr !== "" ? expr : expression) + "*"; break;
+                case "/": expr = (expr !== "" ? expr : expression) + "/"; break;
+                case "%": throw new Error("% is not been implemented yet.");
                 default: throw new Error("Invalid Operation detected.");
             }
             setExpr(expr);
+            setInpNumber("0");
             setDecimalinp(true);
         } catch (error) {
             console.error(error);
         }
     };
 
-    const handleNumClick = (value: string) => { 
+    const handleNumClick = (value: string) => {
         if (!allowDirect) {
             setInpNumber((inpNumber === "0" ? "" : inpNumber) + value);
             setExpr((expression === "0" ? "" : expression) + value);
         } else {
             setAllowDirect(false);
             setInpNumber(value);
-            setExpr((expression === "0" || expression===inpNumber ? "" : expression) + value);
+            setExpr((expression === "0" || expression === inpNumber ? "" : expression) + value);
         }
     }
+
 
     const handleClear = () => { 
         setInpNumber("0");
         setDecimalinp(true);
-        setExpr("0");
+        setExpr("");
     };
 
     const handleResult = () => { 
-        const inp = expression;
-        const tokens = tokenize(inp);
+        if (expression === "" && inpNumber !== "") {
+            return;
+        }
+        const tokens = tokenize(expression);
 
         const newTokens = [];
         for (let i = 0; i < tokens.length; i++) 
@@ -166,59 +170,94 @@ export const App: React.FC = () => {
             
         const pf = infixToPostfix(newTokens);
         const res = evaluatePostfix(pf);
-        let out = "";
+        
+        let out = "0";
         if (res) out = (res.toString().includes(".") ? parseFloat(res.toFixed(4)) : res).toString();
 
         setInpNumber(out);
-        setExpr(out);
+        setExpr("");
         setDecimalinp(true);
         setAllowDirect(true);
     };
 
     const handleDecimalInput = () => { 
-        if (inpDecimal) {
+        if (inpDecimal && !inpNumber.includes(".")) {
+            let str = "";
+            if (allowDirect) {
+                setAllowDirect(false);
+                str = inpNumber;
+            }
             setInpNumber(inpNumber + ".");
             if (inpNumber === "0") setExpr(expression + "0.");
-            else setExpr(expression + ".");
+            else setExpr(expression+ str + ".");
             setDecimalinp(false);
         }
     };
 
     const handleBack = () => { 
+        if (allowDirect) {
+            setAllowDirect(false);
+            setInpNumber("0");
+            setExpr("");
+            return;
+        }
+
         const newInp = inpNumber.slice(0, inpNumber.length - 1);
         const newExpr = expression.slice(0, expression.length - 1);
         setInpNumber(newInp === "" ? "0" : newInp);
-        setExpr(newExpr === "" ? "0" : newExpr); 
+        setExpr(newExpr); 
     };
-    
+
+    interface btn  {
+        id: string;
+        classes: Array<string>;
+        clickHandler: () => void;
+        display: string;
+    };
+
+    const btns: Array<btn> = [
+        { id: "clear", classes: [], clickHandler: () => { handleClear(); }, display: "AC" },
+        { id: "back", classes: [], clickHandler: () => { handleBack(); }, display: "C" },
+        { id: "percent", classes: [], clickHandler: () => { addOperation("%"); }, display: "%" },
+        { id: "divide", classes: [], clickHandler: () => { addOperation("/"); }, display: "/" },
+        { id: "seven", classes: [], clickHandler: () => { handleNumClick("7"); }, display: "7" },
+        { id: "eight", classes: [], clickHandler: () => { handleNumClick("8"); }, display: "8" },
+        { id: "nine", classes: [], clickHandler: () => { handleNumClick("9"); }, display: "9" },
+        { id: "multiply", classes: [], clickHandler: () => { addOperation("*"); }, display: "x" },
+        { id: "four", classes: [], clickHandler: () => { handleNumClick("4"); }, display: "4" },
+        { id: "five", classes: [], clickHandler: () => { handleNumClick("5"); }, display: "5" },
+        { id: "six", classes: [], clickHandler: () => { handleNumClick("6"); }, display: "6" },
+        { id: "subtract", classes: [], clickHandler: () => { addOperation("-"); }, display: "-" },
+        { id: "one", classes: [], clickHandler: () => { handleNumClick("1"); }, display: "1" },
+        { id: "two", classes: [], clickHandler: () => { handleNumClick("2"); }, display: "2" },
+        { id: "three", classes: [], clickHandler: () => { handleNumClick("3"); }, display: "3" },
+        { id: "add", classes: [], clickHandler: () => { addOperation("+"); }, display: "+" },
+        { id: "zero", classes: [styles.zero], clickHandler: () => { handleNumClick("0"); }, display: "0" },
+        { id: "decimal", classes: [], clickHandler: () => { handleDecimalInput(); }, display: "." },
+        { id: "equals", classes: [styles.accent], clickHandler: () => { handleResult(); }, display: "=" },
+        ];
+
 
     return (
         <div className={styles.container}>
-            <div style={ {width:"12rem"}}>
-                <div id="inputs">
-                    <label id="expression">{expression}</label>
-                    <div id="display">{inpNumber}</div>
+            <div>
+                <div className={styles.inputs}>
+                    <label id="expression" className={styles.expr}>{expression}</label>
+                    <div id="display" className={styles.inpnum}>{inpNumber}</div>
                 </div>
                 <div className={styles.buttons}>
-                    <button id="clear" onClick={() => { handleClear(); }}>AC</button>
-                    <button id="back" onClick={() => { handleBack(); }}>C</button>
-                    <button id="percent">%</button>
-                    <button id="divide" onClick={() => { addOperation("div"); }}> / </button>
-                    <button id="seven" onClick={() => { handleNumClick("7"); }}>7</button>
-                    <button id="eight" onClick={() => { handleNumClick("8"); }}>8</button>
-                    <button id="nine" onClick={() => { handleNumClick("9"); }}>9</button>
-                    <button id="multiply" onClick={() => { addOperation("mul"); }}>x</button>
-                    <button id="four" onClick={() => { handleNumClick("4"); }}>4</button>
-                    <button id="five" onClick={() => { handleNumClick("5"); }}>5</button>
-                    <button id="six" onClick={() => { handleNumClick("6"); }}>6</button>
-                    <button id="subtract" onClick={() => { addOperation("sub"); }}>-</button>
-                    <button id="one" onClick={() => { handleNumClick("1"); }}>1</button>
-                    <button id="two" onClick={() => { handleNumClick("2"); }}>2</button>
-                    <button id="three" onClick={() => { handleNumClick("3"); }}>3</button>
-                    <button id="add" onClick={() => { addOperation("add"); }}> + </button>
-                    <button id="zero" className={styles.zero} onClick={() => { handleNumClick("0"); }}>0</button>
-                    <button id="decimal" onClick={() => { handleDecimalInput(); }}>.</button>
-                    <button id="equals" onClick={() => { handleResult(); }}> = </button>
+                    {
+                        btns.map(btn => { 
+                            return (
+                                <button
+                                    key={btn.id}
+                                    id={btn.id}
+                                    className={ btn.classes.join("+") }
+                                    onClick={btn.clickHandler}
+                                >{btn.display}</button>
+                            );
+                        })
+                    }
                 </div>
             </div>
         </div>
@@ -226,27 +265,3 @@ export const App: React.FC = () => {
 };
 
 export default App;
-
-
-                    // <div id="editable">
-                    //     <button id="clear" onClick={() => { handleClear(); }}>AC</button>
-                    //     <button id="back" onClick={() => { handleBack(); }}>C</button>
-                    // </div>
-                    // <div id="operations">
-                    //     <button id="add" onClick={() => { addOperation("add"); }}> + </button>
-                    //     <button id="subtract" onClick={() => { addOperation("sub"); }}> - </button>
-                    //     <button id="multiply" onClick={() => { addOperation("mul"); }}> * </button>
-                    //     <button id="divide" onClick={() => { addOperation("div"); }}> / </button>
-                    // </div>
-                    // <div id="numpad">
-                    //     {
-                    //         numbers.map((num) => {
-                    //             return <button key={num.display} id={num.display} onClick={() => { handleNumClick(num.value.toString()); }}>{num.value}</button>
-                    //         })
-                    //     }
-                    // </div>
-                    // <div id="last-row">
-                    //     <button id="zero" onClick={() => { handleNumClick("0"); }} >0</button>
-                    //     <button id="decimal" onClick={() => { handleDecimalInput(); }}>.</button>
-                    //     <button id="equals" onClick={() => { handleResult(); }}> = </button>
-                    // </div>
